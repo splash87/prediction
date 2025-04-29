@@ -121,17 +121,20 @@
 
   <script>
     async function fetchOddsFromSheet() {
-      const url = "https://script.google.com/macros/s/AKfycbyRtp_zV35OWbp_0eVhan-ukzTGOENmgGn0G6df-6rlBZ1h1Tuf7O521DoOkoE1Kn4rSA/exec";
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-        document.getElementById('oddsA').value = data['Team A'] || '2.0';
-        document.getElementById('oddsDraw').value = data['Draw'] || '3.0';
-        document.getElementById('oddsB').value = data['Team B'] || '2.5';
-      } catch (err) {
-        console.error('Failed to fetch odds:', err);
-      }
+  const url = "https://script.google.com/macros/s/AKfycbyRtp_zV35OWbp_0eVhan-ukzTGOENmgGn0G6df-6rlBZ1h1Tuf7O521DoOkoE1Kn4rSA/exec";
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data && data.odds) {
+      document.getElementById('oddsA').value = data.odds['Team A'] || '2.0';
+      document.getElementById('oddsDraw').value = data.odds['Draw'] || '3.0';
+      document.getElementById('oddsB').value = data.odds['Team B'] || '2.5';
     }
+  } catch (err) {
+    console.error('Failed to fetch odds:', err);
+  }
+}
+
 
     function generateRefID() {
       return 'REF' + Math.floor(Math.random() * 1000000);
