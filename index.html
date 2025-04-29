@@ -1,139 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Betting Simulator</title>
-    <style>
-        .hidden {
-            display: none;
-        }
-        .bet-summary {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            background-color: #f9f9f9;
-        }
-        .bet-summary p {
-            font-size: 16px;
-        }
-        .reference-id {
-            font-weight: bold;
-            font-size: 18px;
-            color: #007bff;
-        }
-        .important-note {
-            font-weight: bold;
-            color: red;
-            font-size: 16px;
-            text-transform: uppercase;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Match Betting</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f8f9fa;
+      color: #333;
+      padding: 1rem;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+      color: #007bff;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+    }
+    input, button {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+    .bet-options {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .bet-option {
+      flex: 1;
+      padding: 0.5rem;
+      text-align: center;
+      background: #e9ecef;
+      border-radius: 5px;
+    }
+    .bet-option input[type="radio"] {
+      margin-right: 0.5rem;
+    }
+    .odds-input {
+      width: 80px;
+      margin-top: 0.3rem;
+      font-size: 0.9rem;
+    }
+    button {
+      background: #007bff;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .popover {
+      background: #fff3cd;
+      padding: 1rem;
+      border: 1px solid #ffeeba;
+      border-radius: 5px;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+    }
+    .whatsapp-button {
+      display: inline-block;
+      background-color: #25D366;
+      color: white;
+      text-align: center;
+      padding: 0.75rem;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+      margin-top: 1rem;
+    }
+  </style>
 </head>
 <body>
+  <div class="container">
     <h2>Place Your Bet</h2>
-    <form id="betForm">
-        <label for="betOption">Choose Bet Option:</label>
-        <select id="betOption" name="betOption" required>
-            <option value="Team A">Team A</option>
-            <option value="Team B">Team B</option>
-            <option value="Draw">Draw</option>
-        </select>
-        <br>
-        <label for="stake">Stake Amount (₦):</label>
-        <input type="number" id="stake" name="stake" min="3000" max="60000" required>
-        <br>
-        <label for="whatsappNumber">Your WhatsApp Number:</label>
-        <input type="text" id="whatsappNumber" name="whatsappNumber" required>
-        <br>
-        <button type="submit">Place Bet</button>
-    </form>
-
-    <div id="betSummary" class="bet-summary hidden">
-        <p><strong>Bank Account Number for Payment:</strong> 7081840467</p>
-        <p><strong>Bank Name:</strong> Opay</p>
-        <p><strong>Account Name:</strong> Oluwole</p>
-        <p><strong>Amount to Transfer:</strong> ₦<span id="amountToTransfer"></span></p>
-        <p><strong>Note:</strong> Transfer the exact amount. Refund is not possible if the amount is incorrect.</p>
-        <p class="important-note"><strong>IMPORTANT: THE REFERENCE ID <span id="referenceID" class="reference-id"></span> MUST BE ADDED AS THE REMARK IN THE TRANSACTION SLIP.</strong></p>
-        <p><strong>WhatsApp Number:</strong> +2347081840467</p>
-        <p><strong>Message Template for WhatsApp:</strong></p>
-        <pre id="whatsappMessageTemplate"></pre>
-        <button id="copyReferenceBtn">Copy Reference ID</button>
+    <div class="bet-options">
+      <div class="bet-option">
+        <label><input type="radio" name="betOption" value="Team A" checked> Team A</label>
+        <input type="number" id="oddsA" class="odds-input" placeholder="Odds" readonly />
+      </div>
+      <div class="bet-option">
+        <label><input type="radio" name="betOption" value="Draw"> Draw</label>
+        <input type="number" id="oddsDraw" class="odds-input" placeholder="Odds" readonly />
+      </div>
+      <div class="bet-option">
+        <label><input type="radio" name="betOption" value="Team B"> Team B</label>
+        <input type="number" id="oddsB" class="odds-input" placeholder="Odds" readonly />
+      </div>
     </div>
 
-    <script>
-        document.getElementById("betForm").addEventListener("submit", function(event) {
-            event.preventDefault();  // Prevent form from submitting traditionally
+    <label for="amount">Stake Amount (₦)</label>
+    <input type="number" id="amount" placeholder="Minimum ₦3000 - Maximum ₦60000" />
 
-            // Get form values
-            const betOption = document.getElementById("betOption").value;
-            const stake = document.getElementById("stake").value;
-            const whatsappNumber = document.getElementById("whatsappNumber").value;
+    <button onclick="placeBet()">Place Bet</button>
 
-            // Generate Reference ID (random string)
-            const refID = 'REF' + Math.random().toString(36).substring(2, 10).toUpperCase();
+    <div id="paymentDetails" class="popover" style="display:none;"></div>
+    <a id="whatsappLink" class="whatsapp-button" style="display:none;" target="_blank">Message on WhatsApp to Confirm</a>
+  </div>
 
-            // Display bet summary
-            document.getElementById("betSummary").classList.remove("hidden");
-            document.getElementById("amountToTransfer").textContent = stake;
-            document.getElementById("referenceID").textContent = refID;
+  <script>
+    async function fetchOddsFromSheet() {
+      const url = "https://script.google.com/macros/s/AKfycbyRtp_zV35OWbp_0eVhan-ukzTGOENmgGn0G6df-6rlBZ1h1Tuf7O521DoOkoE1Kn4rSA/exec";
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        document.getElementById('oddsA').value = data['Team A'] || '2.0';
+        document.getElementById('oddsDraw').value = data['Draw'] || '3.0';
+        document.getElementById('oddsB').value = data['Team B'] || '2.5';
+      } catch (err) {
+        console.error('Failed to fetch odds:', err);
+      }
+    }
 
-            // WhatsApp message template with reference ID
-            const messageTemplate = `I want to confirm payment for my bet with Ref ID: ${refID}. Here’s the proof of payment.`;
-            document.getElementById("whatsappMessageTemplate").textContent = messageTemplate;
+    function generateRefID() {
+      return 'REF' + Math.floor(Math.random() * 1000000);
+    }
 
-            // Handle copy functionality for Reference ID
-            document.getElementById("copyReferenceBtn").addEventListener("click", function() {
-                // Create a temporary input field to copy the Reference ID
-                const input = document.createElement("input");
-                input.value = refID;
-                document.body.appendChild(input);
-                input.select();
-                document.execCommand("copy");
-                document.body.removeChild(input);
-                alert("Reference ID copied to clipboard!");
-            });
+    function placeBet() {
+      const selected = document.querySelector('input[name="betOption"]:checked');
+      const option = selected ? selected.value : null;
+      const amount = parseInt(document.getElementById('amount').value);
+      const paymentDiv = document.getElementById('paymentDetails');
+      const whatsappLink = document.getElementById('whatsappLink');
+      if (amount < 3000 || amount > 60000) {
+        alert('Stake must be between ₦3000 and ₦60000');
+        return;
+      }
 
-            // Optionally: Send data to Google Sheets (this step remains as before)
-            const betData = {
-                refID: refID,
-                betOption: betOption,
-                stake: stake,
-                accountNumber: '7081840467', // Admin's account number
-                whatsappNumber: whatsappNumber,
-                status: "Pending",
-                paymentTime: "",
-                notes: ""
-            };
+      const refID = generateRefID();
+      const accountNumber = "7081840467";
+      const bank = "Opay";
+      const name = "Oluwole";
+      const phone = "2347081840467";
+      const odds = {
+        "Team A": document.getElementById('oddsA').value,
+        "Draw": document.getElementById('oddsDraw').value,
+        "Team B": document.getElementById('oddsB').value,
+      };
 
-            // Send bet data to Google Sheets (same function as before)
-            sendBetDataToGoogleSheet(betData);
-        });
+      paymentDiv.innerHTML = `
+        <strong>IMPORTANT:</strong> TRANSFER EXACT AMOUNT (₦${amount}) TO:
+        <br><br><strong>Account No:</strong> ${accountNumber}<br>
+        <strong>Bank:</strong> ${bank}<br>
+        <strong>Account Name:</strong> ${name}<br><br>
+        <b style="color:red">USE THIS REF ID AS PAYMENT NOTE (REMARK):</b> <strong>${refID}</strong><br>
+        <em>⚠️ No refund if wrong amount or no Ref ID is used!</em><br><br>
+        You selected: <strong>${option}</strong> @ <strong>Odds ${odds[option]}</strong>
+      `;
+      paymentDiv.style.display = 'block';
 
-        function sendBetDataToGoogleSheet(betData) {
-            const googleSheetUrl = "https://script.google.com/macros/s/AKfycbyRtp_zV35OWbp_0eVhan-ukzTGOENmgGn0G6df-6rlBZ1h1Tuf7O521DoOkoE1Kn4rSA/exec";  // Replace with your Google Apps Script URL
+      const encodedMessage = encodeURIComponent(`Hello, I just placed a bet.\nRef ID: ${refID}\nOption: ${option} @ Odds ${odds[option]}\nAmount: ₦${amount}\nI've made payment. Please confirm.`);
+      whatsappLink.href = `https://wa.me/${phone}?text=${encodedMessage}`;
+      whatsappLink.style.display = 'block';
+    }
 
-            fetch(googleSheetUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(betData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Bet placed successfully:', data);
-                alert("Your bet has been placed! Please check your WhatsApp for payment instructions.");
-                
-                // Redirect to WhatsApp (with reference ID and message)
-                window.open(`https://wa.me/+2347081840467?text=I%20want%20to%20confirm%20payment%20for%20my%20bet%20with%20Ref%20ID%20${betData.refID}`);
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-                alert("Something went wrong, please try again.");
-            });
-        }
-    </script>
+    window.onload = fetchOddsFromSheet;
+  </script>
 </body>
 </html>
