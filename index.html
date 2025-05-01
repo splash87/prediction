@@ -97,7 +97,7 @@
     <h2>Place Your Bet</h2>
     <div class="bet-options">
       <div class="bet-option">
-        <label><input type="radio" name="betOption" value="Team A" checked> Team A</label>
+        <label><input type="radio" name="betOption" value="Team A" checked> Alpha</label>
         <input type="number" id="oddsA" class="odds-input" placeholder="Odds" readonly />
       </div>
       <div class="bet-option">
@@ -105,7 +105,7 @@
         <input type="number" id="oddsDraw" class="odds-input" placeholder="Odds" readonly />
       </div>
       <div class="bet-option">
-        <label><input type="radio" name="betOption" value="Team B"> Team B</label>
+        <label><input type="radio" name="betOption" value="Team B"> Beta</label>
         <input type="number" id="oddsB" class="odds-input" placeholder="Odds" readonly />
       </div>
     </div>
@@ -120,11 +120,12 @@
   </div>
 
   <script>
-    async function fetchOddsFromSheet() {
-  const url = "https://script.google.com/macros/s/AKfycbyRtp_zV35OWbp_0eVhan-ukzTGOENmgGn0G6df-6rlBZ1h1Tuf7O521DoOkoE1Kn4rSA/exec";
+   async function fetchOddsFromSheet() {
+  const url = "https://script.google.com/macros/s/AKfycbyfuR5rz-m7kGDu6TBrZtuEv4MhSm3gwKUXR-CEcFsndXkaqGZQPFOQi59ceg04eXYf0g/exec";
   try {
     const response = await fetch(url);
-    const data = await response.json();
+    const data = await response.json(); // This will parse the JSON correctly
+
     if (data && data.odds) {
       document.getElementById('oddsA').value = data.odds['Team A'] || '2.0';
       document.getElementById('oddsDraw').value = data.odds['Draw'] || '3.0';
@@ -135,17 +136,17 @@
   }
 }
 
-
     function generateRefID() {
       return 'REF' + Math.floor(Math.random() * 1000000);
     }
 
-    function placeBet() {
+    async function placeBet() {
       const selected = document.querySelector('input[name="betOption"]:checked');
       const option = selected ? selected.value : null;
       const amount = parseInt(document.getElementById('amount').value);
       const paymentDiv = document.getElementById('paymentDetails');
       const whatsappLink = document.getElementById('whatsappLink');
+      
       if (amount < 3000 || amount > 60000) {
         alert('Stake must be between ₦3000 and ₦60000');
         return;
@@ -176,6 +177,31 @@
       const encodedMessage = encodeURIComponent(`Hello, I just placed a bet.\nRef ID: ${refID}\nOption: ${option} @ Odds ${odds[option]}\nAmount: ₦${amount}\nI've made payment. Please confirm.`);
       whatsappLink.href = `https://wa.me/${phone}?text=${encodedMessage}`;
       whatsappLink.style.display = 'block';
+
+      // Record the bet data in Google Sheets immediately after clicking the WhatsApp link
+      try {
+        const recordUrl = 'https://script.google.com/macros/s/AKfycbyfuR5rz-m7kGDu6TBrZtuEv4MhSm3gwKUXR-CEcFsndXkaqGZQPFOQi59ceg04eXYf0g/exec';
+        const response = await fetch(recordUrl, {
+          method: 'POST',
+          body: JSON.stringify({
+            ref_id: refID,
+            bet_option: option,
+            stake: amount,
+            odds: odds[option],
+            timestamp: new Date().toISOString(),
+            status: 'Pending',
+            notes: 'Payment in progress',
+            payment_time: ''
+          }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        const result = await response.json();
+        console.log('Bet recorded:', result);
+      } catch (error) {
+        console.error('Failed to record bet:', error);
+      }
     }
 
     window.onload = fetchOddsFromSheet;
